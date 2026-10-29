@@ -6,6 +6,19 @@ A web app that predicts a person's obesity level from body measurements, eating 
 
 > This is a statistical estimate, not a medical diagnosis.
 
+**Live demo:** https://kg-obesity-predictor.onrender.com
+
+## Screenshots
+
+### Prediction form
+![Prediction form](docs/images/blank1.png)
+![Prediction form](docs/images/blank2.png)
+
+### Prediction Result
+![Prediction Result](docs/images/result1.png)
+![Prediction Result](docs/images/result2.png)
+
+
 ## Dataset
 
 - Source 1: https://www.kaggle.com/datasets/tathagatbanerjee/obesity-dataset-uci-ml
