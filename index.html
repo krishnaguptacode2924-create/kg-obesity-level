@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obesity Level Predictor</title>
+<style>
+  :root {
+    --bg: #f3f6f5; --surface: #ffffff; --ink: #14231f; --muted: #5b6b66;
+    --line: #d5dedb; --accent: #0f766e; --accent-ink: #ffffff; --err: #b42318;
+    --font: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1715; --surface: #16231f; --ink: #e8f1ee; --muted: #9bb0aa;
+      --line: #2b3d38; --accent: #2dd4bf; --accent-ink: #06201c; --err: #f97066;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); line-height: 1.5; }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 18px 64px; }
+  h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.02em; }
+  .lead { color: var(--muted); margin: 0 0 28px; max-width: 60ch; }
+  fieldset { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; margin: 0 0 18px; padding: 18px 20px 20px; }
+  legend { font-weight: 650; padding: 0 8px; font-size: 1.05rem; }
+  .grid { display: grid; gap: 16px 18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+  label { display: block; font-size: .9rem; font-weight: 600; margin-bottom: 5px; }
+  input, select { width: 100%; padding: 10px 12px; font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; }
+  input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  button { width: 100%; padding: 14px; font: inherit; font-weight: 650; font-size: 1.05rem; color: var(--accent-ink); background: var(--accent); border: 0; border-radius: 10px; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: wait; }
+  #result { margin-top: 24px; padding: 22px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+  #result[hidden] { display: none; }
+  #result.error { border-color: var(--err); color: var(--err); }
+  .verdict { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 700; margin: 0 0 12px; letter-spacing: -0.01em; }
+  .bar { height: 10px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .5s ease; }
+  .conf { margin: 8px 0 0; color: var(--muted); font-size: .95rem; }
+  .note { margin-top: 22px; color: var(--muted); font-size: .85rem; }
+  @media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Obesity level predictor</h1>
+  <p class="lead">Answer the questions below to estimate your weight category from your body measurements, eating habits and lifestyle.</p>
+
+  <form id="form" novalidate>
+    <fieldset>
+      <legend>About you</legend>
+      <div class="grid">
+        <div><label for="Female">Gender</label>
+          <select id="Female" name="Female" required><option value="" hidden>Select</option><option>Female</option><option>Male</option></select></div>
+        <div><label for="Age">Age (years)</label>
+          <input id="Age" name="Age" type="number" min="14" max="100" step="1" required></div>
+        <div><label for="Height">Height (metres)</label>
+          <input id="Height" name="Height" type="number" min="1" max="2.5" step="0.01" placeholder="e.g. 1.70" required></div>
+        <div><label for="Weight">Weight (kg)</label>
+          <input id="Weight" name="Weight" type="number" min="30" max="300" step="0.1" required></div>
+        <div><label for="Family_History">Family history of overweight</label>
+          <select id="Family_History" name="Family_History" required><option value="" hidden>Select</option><option>Yes</option><option>No</option></select></div>
+        <div><label for="SMOKE">Do you smoke?</label>
+          <select id="SMOKE" name="SMOKE" required><option value="" hidden>Select</option><option>Yes</option><option>No</option></select></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Eating habits</legend>
+      <div class="grid">
+        <div><label for="FAVC">Eat high-calorie food often?</label>
+          <select id="FAVC" name="FAVC" required><option value="" hidden>Select</option><option>Yes</option><option>No</option></select></div>
+        <div><label for="FCVC">Vegetables in your meals</label>
+          <select id="FCVC" name="FCVC" required><option value="" hidden>Select</option><option value="1">Never</option><option value="2">Sometimes</option><option value="3">Always</option></select></div>
+        <div><label for="NCP">Main meals per day</label>
+          <select id="NCP" name="NCP" required><option value="" hidden>Select</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4 or more</option></select></div>
+        <div><label for="CAEC">Snacking between meals</label>
+          <select id="CAEC" name="CAEC" required><option value="" hidden>Select</option><option value="no">Never</option><option>Sometimes</option><option>Frequently</option><option>Always</option></select></div>
+        <div><label for="CH2O">Daily water intake</label>
+          <select id="CH2O" name="CH2O" required><option value="" hidden>Select</option><option value="1">Less than 1 litre</option><option value="2">1 to 2 litres</option><option value="3">More than 2 litres</option></select></div>
+        <div><label for="SCC">Track your daily calories?</label>
+          <select id="SCC" name="SCC" required><option value="" hidden>Select</option><option>Yes</option><option>No</option></select></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Lifestyle</legend>
+      <div class="grid">
+        <div><label for="FAF">Physical activity</label>
+          <select id="FAF" name="FAF" required><option value="" hidden>Select</option><option value="0">None</option><option value="1">1 to 2 days a week</option><option value="2">2 to 4 days a week</option><option value="3">4 to 5 days a week</option></select></div>
+        <div><label for="TUE">Daily time on devices</label>
+          <select id="TUE" name="TUE" required><option value="" hidden>Select</option><option value="0">0 to 2 hours</option><option value="1">3 to 5 hours</option><option value="2">More than 5 hours</option></select></div>
+        <div><label for="CALC">Alcohol consumption</label>
+          <select id="CALC" name="CALC" required><option value="" hidden>Select</option><option value="no">Never</option><option>Sometimes</option><option>Frequently</option><option>Always</option></select></div>
+        <div><label for="MTRANS">Main way you travel</label>
+          <select id="MTRANS" name="MTRANS" required><option value="" hidden>Select</option><option value="Car">Car</option><option value="Cycle">Bicycle</option><option value="Motorbike">Motorbike</option><option value="Public">Public transport</option><option value="Walking">Walking</option></select></div>
+      </div>
+    </fieldset>
+
+    <button id="go" type="submit">Predict my level</button>
+  </form>
+
+  <section id="result" role="status" aria-live="polite" hidden></section>
+  <p class="note">This is a statistical estimate, not a medical diagnosis. Talk to a doctor for health advice.</p>
+</main>
+
+<script>
+  const form = document.getElementById("form");
+  const btn = document.getElementById("go");
+  const box = document.getElementById("result");
+
+  function show(html, isError) {
+    box.className = isError ? "error" : "";
+    box.innerHTML = html;
+    box.hidden = false;
+    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function esc(text) {
+    const d = document.createElement("div");
+    d.textContent = text;
+    return d.innerHTML;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+
+    const data = Object.fromEntries(new FormData(form).entries());
+    btn.disabled = true;
+    btn.textContent = "Predicting…";
+    try {
+      // relative URL: works on localhost and on Render without changes
+      const res = await fetch("predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      const out = await res.json();
+      if (!res.ok) throw new Error(out.error || "Something went wrong.");
+      show(
+        '<p class="verdict">' + esc(out.Prediction) + '</p>' +
+        '<div class="bar" aria-hidden="true"><span id="fill"></span></div>' +
+        '<p class="conf">Model confidence: ' + esc(String(out.Confidence_score)) + '%</p>',
+        false
+      );
+      requestAnimationFrame(() => {
+        document.getElementById("fill").style.width = Math.min(100, out.Confidence_score) + "%";
+      });
+    } catch (err) {
+      show("Could not get a prediction. " + esc(err.message), true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Predict my level";
+    }
+  });
+</script>
+</body>
+</html>
